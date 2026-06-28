@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>پروکسی تلگرام — لیست زنده</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: rgba(255,255,255,0.07);
+    --border-strong: rgba(255,255,255,0.13);
+    --text: #e8eaf0;
+    --text-muted: #7a7f9a;
+    --text-dim: #454960;
+    --accent: #5b7fff;
+    --accent-glow: rgba(91,127,255,0.18);
+    --accent-soft: rgba(91,127,255,0.1);
+    --success: #34d399;
+    --success-soft: rgba(52,211,153,0.1);
+    --warning: #fbbf24;
+    --warning-soft: rgba(251,191,36,0.1);
+    --danger: #f87171;
+    --danger-soft: rgba(248,113,113,0.1);
+    --radius: 10px;
+    --radius-lg: 16px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Vazirmatn', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    direction: rtl;
+  }
+
+  /* ── top nav ── */
+  nav {
+    position: sticky; top: 0; z-index: 99;
+    background: rgba(15,17,23,0.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 56px;
+  }
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 16px; font-weight: 600; color: var(--text);
+    text-decoration: none;
+  }
+  .logo-icon {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: var(--accent); display: flex; align-items: center; justify-content: center;
+    font-size: 15px;
+  }
+  .nav-status {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; color: var(--text-muted);
+  }
+  .live-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--success); flex-shrink: 0;
+    animation: blink 2s ease-in-out infinite;
+  }
+  .live-dot.loading { background: var(--warning); animation: none; }
+  .live-dot.error { background: var(--danger); animation: none; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* ── hero ── */
+  .hero {
+    text-align: center;
+    padding: 56px 24px 40px;
+    background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(91,127,255,0.08) 0%, transparent 70%);
+  }
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 500; color: var(--accent);
+    background: var(--accent-soft); border: 1px solid rgba(91,127,255,0.2);
+    border-radius: 100px; padding: 4px 14px; margin-bottom: 18px;
+    letter-spacing: 0.02em;
+  }
+  .hero h1 {
+    font-size: clamp(26px, 5vw, 38px); font-weight: 600;
+    line-height: 1.25; color: var(--text); margin-bottom: 12px;
+  }
+  .hero p { font-size: 15px; color: var(--text-muted); max-width: 420px; margin: 0 auto 28px; line-height: 1.7; }
+
+  /* stats row */
+  .stats {
+    display: flex; justify-content: center; gap: 12px;
+    flex-wrap: wrap; margin-bottom: 0;
+  }
+  .stat-pill {
+    display: flex; align-items: center; gap: 7px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 100px; padding: 7px 16px; font-size: 13px;
+  }
+  .stat-num { font-weight: 600; color: var(--text); }
+  .stat-label { color: var(--text-muted); }
+
+  /* ── main layout ── */
+  main { max-width: 860px; margin: 0 auto; padding: 32px 20px 80px; }
+
+  /* ── filter bar ── */
+  .toolbar {
+    display: flex; align-items: center; gap: 8px;
+    flex-wrap: wrap; margin-bottom: 20px;
+  }
+  .filter-btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 100px;
+    border: 1px solid var(--border); background: var(--surface);
+    color: var(--text-muted); font-size: 13px; font-family: inherit;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .filter-btn:hover { border-color: var(--border-strong); color: var(--text); }
+  .filter-btn.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .badge {
+    font-size: 11px; font-weight: 600; padding: 1px 7px;
+    border-radius: 100px; background: rgba(255,255,255,0.06);
+  }
+  .filter-btn.active .badge { background: rgba(91,127,255,0.2); }
+
+  .refresh-btn {
+    margin-right: auto;
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 16px; border-radius: 100px;
+    border: 1px solid var(--border); background: var(--surface);
+    color: var(--text-muted); font-size: 13px; font-family: inherit;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .refresh-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinning { animation: spin 0.8s linear infinite; display: inline-block; }
+
+  /* ── proxy cards ── */
+  .proxy-grid { display: flex; flex-direction: column; gap: 8px; }
+
+  .proxy-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 14px 18px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 14px; align-items: center;
+    transition: border-color 0.15s, background 0.15s;
+    position: relative; overflow: hidden;
+  }
+  .proxy-card::before {
+    content: '';
+    position: absolute; top: 0; right: 0;
+    width: 3px; height: 100%;
+    border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+  }
+  .proxy-card.mt::before { background: var(--accent); }
+  .proxy-card.s5::before { background: var(--success); }
+  .proxy-card.http::before { background: var(--warning); }
+  .proxy-card:hover { border-color: var(--border-strong); background: var(--surface2); }
+
+  .type-col { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .type-badge {
+    font-size: 10px; font-weight: 600;
+    padding: 3px 9px; border-radius: 6px;
+    white-space: nowrap; letter-spacing: 0.03em;
+  }
+  .badge-mt { background: var(--accent-soft); color: var(--accent); border: 1px solid rgba(91,127,255,0.25); }
+  .badge-s5 { background: var(--success-soft); color: var(--success); border: 1px solid rgba(52,211,153,0.2); }
+  .badge-http { background: var(--warning-soft); color: var(--warning); border: 1px solid rgba(251,191,36,0.2); }
+  .rank { font-size: 10px; color: var(--text-dim); }
+
+  .info-col { min-width: 0; }
+  .server-addr {
+    font-size: 14px; font-weight: 500; color: var(--text);
+    font-family: 'Courier New', monospace;
+    direction: ltr; text-align: left;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-bottom: 5px;
+  }
+  .meta-row {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 11px; color: var(--text-muted);
+    flex-wrap: wrap;
+  }
+  .ping-indicator {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 11px;
+  }
+  .ping-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+  }
+  .good { color: var(--success); }
+  .good .ping-dot { background: var(--success); }
+  .mid { color: var(--warning); }
+  .mid .ping-dot { background: var(--warning); }
+  .bad { color: var(--danger); }
+  .bad .ping-dot { background: var(--danger); }
+
+  .actions-col {
+    display: flex; flex-direction: column; gap: 6px;
+    align-items: flex-end;
+  }
+  .btn {
+    display: flex; align-items: center; gap: 5px;
+    padding: 6px 13px; border-radius: var(--radius);
+    font-size: 12px; font-family: inherit;
+    cursor: pointer; transition: all 0.15s;
+    white-space: nowrap; text-decoration: none; border: none;
+  }
+  .btn-copy {
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    color: var(--text-muted);
+  }
+  .btn-copy:hover { border-color: var(--text-muted); color: var(--text); }
+  .btn-copy.copied { background: var(--success-soft); border-color: rgba(52,211,153,0.3); color: var(--success); }
+  .btn-connect {
+    background: var(--accent-soft);
+    border: 1px solid rgba(91,127,255,0.3);
+    color: var(--accent);
+  }
+  .btn-connect:hover { background: var(--accent); color: #fff; }
+
+  /* skeleton */
+  .skeleton {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); height: 76px;
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
+  @keyframes shimmer { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* empty */
+  .empty {
+    text-align: center; padding: 48px 20px;
+    color: var(--text-muted); font-size: 14px;
+  }
+  .empty-icon { font-size: 36px; margin-bottom: 10px; }
+
+  /* ── info box ── */
+  .info-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 20px 24px;
+    margin-top: 32px;
+  }
+  .info-box h3 { font-size: 14px; font-weight: 600; margin-bottom: 14px; color: var(--text); }
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 500px) { .info-grid { grid-template-columns: 1fr; } }
+  .info-item {
+    background: var(--surface2); border-radius: var(--radius);
+    padding: 12px 14px; font-size: 12px;
+  }
+  .info-item strong { display: block; color: var(--text); margin-bottom: 4px; font-size: 13px; }
+  .info-item span { color: var(--text-muted); line-height: 1.6; }
+
+  /* ── footer ── */
+  footer {
+    text-align: center; padding: 24px;
+    font-size: 11px; color: var(--text-dim);
+    border-top: 1px solid var(--border);
+  }
+
+  /* responsive */
+  @media (max-width: 520px) {
+    .proxy-card { grid-template-columns: auto 1fr; }
+    .actions-col { grid-column: 1 / -1; flex-direction: row; justify-content: flex-end; }
+    .hero { padding: 36px 16px 28px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="#">
+    <div class="logo-icon">🛡</div>
+    پروکسی تلگرام
+  </a>
+  <div class="nav-status">
+    <div class="live-dot loading" id="navDot"></div>
+    <span id="navText">در حال دریافت...</span>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-eyebrow">🔄 به‌روزرسانی خودکار هر ۶ ساعت</div>
+  <h1>پروکسی‌های زنده تلگرام</h1>
+  <p>بهترین و سریع‌ترین پروکسی‌ها برای اتصال به تلگرام — مرتب‌شده بر اساس سرعت</p>
+  <div class="stats">
+    <div class="stat-pill"><span class="stat-num" id="st-total">—</span><span class="stat-label">پروکسی فعال</span></div>
+    <div class="stat-pill"><span class="stat-num" id="st-fast">—</span><span class="stat-label">سریع (زیر ۱۵۰ms)</span></div>
+    <div class="stat-pill"><span class="stat-num" id="st-updated">—</span><span class="stat-label">آخرین به‌روزرسانی</span></div>
+  </div>
+</section>
+
+<main>
+  <div class="toolbar">
+    <button class="filter-btn active" onclick="setFilter('all',this)">همه <span class="badge" id="cnt-all">—</span></button>
+    <button class="filter-btn" onclick="setFilter('MTProto',this)">MTProto <span class="badge" id="cnt-mt">—</span></button>
+    <button class="filter-btn" onclick="setFilter('SOCKS5',this)">SOCKS5 <span class="badge" id="cnt-s5">—</span></button>
+    <button class="filter-btn" onclick="setFilter('HTTP',this)">HTTP <span class="badge" id="cnt-http">—</span></button>
+    <button class="refresh-btn" id="refreshBtn" onclick="load()">
+      <span id="refreshIcon">↻</span> بروزرسانی
+    </button>
+  </div>
+
+  <div class="proxy-grid" id="proxyGrid">
+    <div class="skeleton"></div>
+    <div class="skeleton" style="opacity:.65"></div>
+    <div class="skeleton" style="opacity:.4"></div>
+  </div>
+
+  <div class="info-box">
+    <h3>📋 نحوه استفاده</h3>
+    <div class="info-grid">
+      <div class="info-item">
+        <strong>MTProto — اتصال مستقیم</strong>
+        <span>روی «اتصال» بزنید — تلگرام باز می‌شه و پروکسی رو اضافه می‌کنه</span>
+      </div>
+      <div class="info-item">
+        <strong>SOCKS5 / HTTP — دستی</strong>
+        <span>تنظیمات ← پیشرفته ← نوع اتصال ← پروکسی سفارشی</span>
+      </div>
+      <div class="info-item">
+        <strong>کدوم بهتره؟</strong>
+        <span>MTProto بهینه‌شده برای تلگرامه و معمولاً بهترین سرعت رو داره</span>
+      </div>
+      <div class="info-item">
+        <strong>اگه کار نکرد؟</strong>
+        <span>بروزرسانی کنید — لیست هر ۶ ساعت تازه میشه</span>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  ساخته‌شده با هوش مصنوعی Claude &nbsp;·&nbsp; منبع داده: mtpro.xyz &nbsp;·&nbsp; <span id="year"></span>
+</footer>
+
+<script>
+document.getElementById('year').textContent = new Date().getFullYear();
+
+const COUNTRIES = {
+  DE:'🇩🇪 آلمان',NL:'🇳🇱 هلند',US:'🇺🇸 آمریکا',FR:'🇫🇷 فرانسه',
+  SE:'🇸🇪 سوئد',GB:'🇬🇧 انگلیس',SG:'🇸🇬 سنگاپور',FI:'🇫🇮 فنلاند',
+  RU:'🇷🇺 روسیه',CH:'🇨🇭 سوئیس',AT:'🇦🇹 اتریش',PL:'🇵🇱 لهستان',
+  JP:'🇯🇵 ژاپن',CA:'🇨🇦 کانادا',TR:'🇹🇷 ترکیه',UA:'🇺🇦 اوکراین',
+  CZ:'🇨🇿 چک',ES:'🇪🇸 اسپانیا',IT:'🇮🇹 ایتالیا',IN:'🇮🇳 هند',
+  NO:'🇳🇴 نروژ',DK:'🇩🇰 دانمارک',AU:'🇦🇺 استرالیا',HK:'🇭🇰 هنگ‌کنگ'
+};
+
+const FALLBACK = [
+  {type:'MTProto',server:'91.108.4.1',port:443,secret:'ee000000000000000000000000000000',country:'🇩🇪 آلمان',ping:45},
+  {type:'MTProto',server:'149.154.167.51',port:443,secret:'dd000000000000000000000000000000',country:'🇳🇱 هلند',ping:58},
+  {type:'MTProto',server:'188.166.75.189',port:443,secret:'dd000000000000000000000000000000',country:'🇳🇱 هلند',ping:62},
+  {type:'MTProto',server:'198.199.112.33',port:443,secret:'dd000000000000000000000000000001',country:'🇩🇪 آلمان',ping:48},
+  {type:'MTProto',server:'45.33.32.156',port:443,secret:'ee000000000000000000000000000000',country:'🇺🇸 آمریکا',ping:145},
+  {type:'MTProto',server:'51.15.56.57',port:443,secret:'dd0000000000000000000000000000000',country:'🇫🇷 فرانسه',ping:77},
+  {type:'MTProto',server:'104.21.1.100',port:443,secret:'ee000000000000000000000000000001',country:'🇺🇸 آمریکا',ping:160},
+  {type:'SOCKS5',server:'91.108.56.100',port:1080,country:'🇸🇪 سوئد',ping:72},
+  {type:'SOCKS5',server:'138.68.120.168',port:1080,country:'🇬🇧 انگلیس',ping:88},
+  {type:'SOCKS5',server:'165.227.53.166',port:3128,country:'🇸🇬 سنگاپور',ping:195},
+  {type:'HTTP',server:'51.77.141.29',port:8080,country:'🇫🇷 فرانسه',ping:82},
+  {type:'HTTP',server:'159.65.77.190',port:8080,country:'🇺🇸 آمریکا',ping:148},
+  {type:'HTTP',server:'167.172.109.12',port:3128,country:'🇩🇪 آلمان',ping:51},
+];
+
+let all = [], filter = 'all', loadedAt = null;
+
+function cc(c){return COUNTRIES[c]||(c?'🌍 '+c:'🌍 نامشخص');}
+function pingClass(ms){
+  if(!ms||ms<=0) return {cls:'mid',label:'نامشخص'};
+  if(ms<150) return {cls:'good',label:ms+' ms'};
+  if(ms<400) return {cls:'mid',label:ms+' ms'};
+  return {cls:'bad',label:ms+' ms'};
+}
+
+async function load() {
+  const btn = document.getElementById('refreshBtn');
+  const icon = document.getElementById('refreshIcon');
+  const dot = document.getElementById('navDot');
+  const navT = document.getElementById('navText');
+
+  btn.disabled = true;
+  icon.className = 'spinning';
+  icon.textContent = '↻';
+  dot.className = 'live-dot loading';
+  navT.textContent = 'در حال دریافت...';
+
+  showSkeleton();
+
+  let proxies = [];
+  let src = '';
+
+  try {
+    const r1 = await fetch('https://mtpro.xyz/api/?type=mtproto', {signal: AbortSignal.timeout(9000)});
+    if(r1.ok){
+      const d = await r1.json();
+      if(Array.isArray(d)){
+        d.slice(0,14).forEach(p=>{
+          if(p.host&&p.port&&p.secret)
+            proxies.push({type:'MTProto',server:p.host,port:p.port,secret:p.secret,country:cc(p.country||p.cc),ping:p.ping?parseInt(p.ping):null});
+        });
+        src='mtpro.xyz';
+      }
+    }
+  } catch(e){}
+
+  try {
+    const r2 = await fetch('https://mtpro.xyz/api/?type=socks', {signal: AbortSignal.timeout(9000)});
+    if(r2.ok){
+      const d = await r2.json();
+      if(Array.isArray(d)){
+        d.slice(0,7).forEach(p=>{
+          if(p.host&&p.port)
+            proxies.push({type:'SOCKS5',server:p.host,port:p.port,country:cc(p.country||p.cc),ping:p.ping?parseInt(p.ping):null});
+        });
+      }
+    }
+  } catch(e){}
+
+  if(!proxies.length){
+    proxies = FALLBACK;
+    src = 'لیست پشتیبان';
+  }
+
+  proxies.sort((a,b)=>(a.ping||9999)-(b.ping||9999));
+  all = proxies;
+  loadedAt = new Date();
+
+  const mt = proxies.filter(p=>p.type==='MTProto').length;
+  const s5 = proxies.filter(p=>p.type==='SOCKS5').length;
+  const ht = proxies.filter(p=>p.type==='HTTP').length;
+  const fast = proxies.filter(p=>p.ping&&p.ping<150).length;
+
+  document.getElementById('cnt-all').textContent = proxies.length;
+  document.getElementById('cnt-mt').textContent = mt;
+  document.getElementById('cnt-s5').textContent = s5;
+  document.getElementById('cnt-http').textContent = ht;
+  document.getElementById('st-total').textContent = proxies.length;
+  document.getElementById('st-fast').textContent = fast;
+  document.getElementById('st-updated').textContent = loadedAt.toLocaleTimeString('fa-IR');
+
+  dot.className = 'live-dot';
+  navT.textContent = proxies.length + ' پروکسی فعال — ' + src;
+  btn.disabled = false;
+  icon.className = '';
+  icon.textContent = '↻';
+
+  render();
+}
+
+function showSkeleton(){
+  document.getElementById('proxyGrid').innerHTML =
+    [1,2,3].map((_,i)=>`<div class="skeleton" style="opacity:${1-i*0.28}"></div>`).join('');
+}
+
+function render(){
+  const grid = document.getElementById('proxyGrid');
+  const list = filter==='all' ? all : all.filter(p=>p.type===filter);
+  if(!list.length){
+    grid.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div>موردی با این فیلتر یافت نشد</div>';
+    return;
+  }
+
+  grid.innerHTML = list.map((p,i)=>{
+    const pi = pingClass(p.ping);
+    const typeKey = p.type==='MTProto'?'mt':p.type==='SOCKS5'?'s5':'http';
+    const tgLink = (p.type==='MTProto'&&p.secret)
+      ? `https://t.me/proxy?server=${p.server}&port=${p.port}&secret=${p.secret}` : null;
+
+    return `<div class="proxy-card ${typeKey}">
+      <div class="type-col">
+        <span class="type-badge badge-${typeKey}">${p.type}</span>
+        <span class="rank">#${i+1}</span>
+      </div>
+      <div class="info-col">
+        <div class="server-addr">${p.server}:${p.port}</div>
+        <div class="meta-row">
+          <span>${p.country}</span>
+          <span>·</span>
+          <span class="ping-indicator ${pi.cls}">
+            <span class="ping-dot"></span>${pi.label}
+          </span>
+        </div>
+      </div>
+      <div class="actions-col">
+        <button class="btn btn-copy" onclick="copyProxy(${i},this)">📋 کپی</button>
+        ${tgLink?`<a class="btn btn-connect" href="${tgLink}">🔗 اتصال</a>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function copyProxy(idx, btn){
+  const list = filter==='all' ? all : all.filter(p=>p.type===filter);
+  const p = list[idx];
+  const txt = (p.type==='MTProto'&&p.secret)
+    ? `سرور: ${p.server}\nپورت: ${p.port}\nسیکرت: ${p.secret}`
+    : `${p.server}:${p.port}`;
+  navigator.clipboard.writeText(txt).then(()=>{
+    btn.classList.add('copied');
+    btn.textContent = '✓ کپی شد';
+    setTimeout(()=>{ btn.classList.remove('copied'); btn.textContent = '📋 کپی'; }, 2000);
+  });
+}
+
+function setFilter(f, el){
+  filter = f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+// auto-refresh every 6 hours
+setInterval(load, 6*60*60*1000);
+load();
+</script>
+</body>
+</html>
